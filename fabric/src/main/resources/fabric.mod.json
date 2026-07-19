@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "arrowlib",
+  "version": "${version}",
+  "name": "ArrowLib",
+  "description": "",
+  "authors": [
+    "Elrol"
+  ],
+  "contact": {
+    "homepage": "https://elrol.dev"
+  },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/arrowlib/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.elrol.arrowlib.fabric.ArrowlibFabric"
+    ],
+    "client": [
+      "dev.elrol.arrowlib.fabric.client.ArrowlibFabricClient"
+    ]
+  },
+  "mixins": [
+    "arrowlib.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "architectury": ">=13.0.8",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
