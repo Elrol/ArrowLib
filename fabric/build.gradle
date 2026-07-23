@@ -49,5 +49,14 @@ shadowJar {
 }
 
 remapJar {
-    input.set shadowJar.archiveFile
+    inputFile.set shadowJar.archiveFile
+}
+
+publishing {
+    publications {
+        mavenFabric(MavenPublication) {
+            artifactId = base.archivesName.get()
+            from components.java
+        }
+    }
 }
