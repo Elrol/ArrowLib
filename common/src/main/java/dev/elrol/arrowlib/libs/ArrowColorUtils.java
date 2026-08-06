@@ -81,9 +81,9 @@ public class ArrowColorUtils {
      */
     public static Color multiply(Color color, float multiplier) {
         return new Color(
-                color.getRed() * multiplier,
-                color.getGreen() * multiplier,
-                color.getBlue() * multiplier,
+                Math.min(255, Math.max(0, (int)(color.getRed() * multiplier))),
+                Math.min(255, Math.max(0, (int)(color.getGreen() * multiplier))),
+                Math.min(255, Math.max(0, (int)(color.getBlue() * multiplier))),
                 color.getAlpha());
     }
 
@@ -95,9 +95,52 @@ public class ArrowColorUtils {
      */
     public static Color merge(Color c1, Color c2) {
         return new Color(
-                c1.getRed() + c2.getRed(),
-                c1.getGreen() + c2.getGreen(),
-                c1.getBlue() + c2.getBlue(),
+                Math.min(255, Math.max(0, c1.getRed() + c2.getRed())),
+                Math.min(255, Math.max(0, c1.getGreen() + c2.getGreen())),
+                Math.min(255, Math.max(0, c1.getBlue() + c2.getBlue())),
                 c1.getAlpha());
+    }
+
+    /**
+     * Replaces a single RGB channel (0 = Red, 1 = Green, 2 = Blue) with a new 0-255 value,
+     * leaving the other two channels and the original Alpha intact.
+     *
+     * @param argb The source ARGB integer color.
+     * @param channel The target channel index (0 = Red, 1 = Green, 2 = Blue).
+     * @param value The new channel value (0-255).
+     * @return The mutated ARGB integer color.
+     */
+    public static int setChannel(int argb, int channel, int value) {
+        int a = (argb >> 24) & 0xFF;
+        int r = (argb >> 16) & 0xFF;
+        int g = (argb >> 8) & 0xFF;
+        int b = argb & 0xFF;
+
+        if (channel == 0) r = Math.max(0, Math.min(255, value));
+        else if (channel == 1) g = Math.max(0, Math.min(255, value));
+        else if (channel == 2) b = Math.max(0, Math.min(255, value));
+
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    /**
+     * Converts an ARGB integer into a 3-element float array containing Red, Green, and Blue normalized to 0.0f - 1.0f.
+     * Useful for level rendering shaders and line box renderers.
+     *
+     * @param argb The raw integer color.
+     * @return An array containing {Red, Green, Blue} floats.
+     */
+    public static float[] argbToFloatRGB(int argb) {
+        float r = ((argb >> 16) & 0xFF) / 255.0f;
+        float g = ((argb >> 8) & 0xFF) / 255.0f;
+        float b = (argb & 0xFF) / 255.0f;
+        return new float[]{ r, g, b };
+    }
+
+    /**
+     * Constructs a solid ARGB integer from individual 0-255 RGB channels (defaults to 100% opacity).
+     */
+    public static int toARGB(int r, int g, int b) {
+        return 0xFF000000 | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
     }
 }
