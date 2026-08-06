@@ -15,6 +15,16 @@ public class ArrowColorUtils {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     /**
+     * Unpacks an ARGB/RGB integer into an array of 3 integer channels [Red, Green, Blue] (0-255).
+     */
+    public static int[] unpackRGB(int argb) {
+        int r = (argb >> 16) & 0xFF;
+        int g = (argb >> 8) & 0xFF;
+        int b = argb & 0xFF;
+        return new int[]{ r, g, b };
+    }
+
+    /**
      * Parses a hex string (e.g., "#FF0000", "0x00FF00", or "FF0000") into an ARGB integer.
      * If no alpha channel is detected in the input string, it defaults to full opacity (0xFF000000).
      *
