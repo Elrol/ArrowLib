@@ -4,6 +4,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class ArrowStringUtils {
 
     /**
@@ -40,15 +43,16 @@ public class ArrowStringUtils {
     }
 
     /**
-     * Replaces 3D spatial coordinate placeholders in the given string template.
+     * Replaces 3D spatial coordinate placeholders and arithmetic coordinate expressions in the given string template.
      * <p>
      * <b>Available Placeholders:</b>
      * <ul>
      *   <li>{@code [{prefix}x]} - Integer X coordinate</li>
      *   <li>{@code [{prefix}y]} - Integer Y coordinate</li>
      *   <li>{@code [{prefix}z]} - Integer Z coordinate</li>
+     *   <li>{@code [{prefix}<x|y|z> <+|-|*|/> <N>]} - Coordinate evaluated by inline arithmetic operation with integer N</li>
      * </ul>
-     * <i>Example with prefix {@code "pos_"}:</i> {@code "{pos_x}"}, {@code "{pos_y}"}, {@code "{pos_z}"}
+     * <i>Examples with prefix {@code "pos_"}:</i> {@code "{pos_x}"}, {@code "{pos_y+1}"}, {@code "{pos_z-2}"}, {@code "{pos_x*2}"}
      *
      * @param string The string template containing placeholders.
      * @param prefix Optional namespace prefix inserted before keys (e.g., {@code "pos_"}). If null, defaults to empty string.
@@ -59,10 +63,58 @@ public class ArrowStringUtils {
         if(string == null || pos == null) return string;
         String p = prefix(prefix);
 
-        return string
+        String result = string
                 .replace("{" + p + "x}", String.valueOf(pos.getX()))
                 .replace("{" + p + "y}", String.valueOf(pos.getY()))
                 .replace("{" + p + "z}", String.valueOf(pos.getZ()));
+
+        String regex = "\\{" + Pattern.quote(p) + "([xyz])\\s*([+\\-*/])\\s*(\\d+)\\}";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(result);
+        StringBuilder sb = new StringBuilder();
+
+        while (matcher.find()) {
+            int newVal = getNewVal(pos, matcher);
+            matcher.appendReplacement(sb, String.valueOf(newVal));
+        }
+        matcher.appendTail(sb);
+
+        return sb.toString();
+    }
+
+    /**
+     * Computes the new coordinate value for a matched arithmetic placeholder expression.
+     * <p>
+     * Expects the matcher to contain three capture groups:
+     * <ol>
+     *   <li>Axis string ({@code "x"}, {@code "y"}, or {@code "z"})</li>
+     *   <li>Operator string ({@code "+"}, {@code "-"}, {@code "*"}, or {@code "/"})</li>
+     *   <li>Integer offset/operand</li>
+     * </ol>
+     *
+     * @param pos     The base {@link BlockPos} providing source coordinates.
+     * @param matcher The {@link Matcher} positioned at a valid coordinate expression match.
+     * @return The calculated integer coordinate value. Returns the base coordinate unmodified if division by zero is attempted.
+     */
+    public static int getNewVal(BlockPos pos, Matcher matcher) {
+        String axis = matcher.group(1);
+        String op = matcher.group(2);
+        int offset = Integer.parseInt(matcher.group(3));
+
+        int baseVal = switch(axis) {
+            case "x" -> pos.getX();
+            case "y" -> pos.getY();
+            case "z" -> pos.getZ();
+            default -> 0;
+        };
+
+        return switch(op) {
+            case "+" -> baseVal + offset;
+            case "-" -> baseVal - offset;
+            case "*" -> baseVal * offset;
+            case "/" -> offset != 0 ? baseVal / offset : baseVal;
+            default -> baseVal;
+        };
     }
 
     @NotNull
