@@ -25,27 +25,33 @@ public class ArrowColorUtils {
     }
 
     /**
-     * Parses a hex string (e.g., "#FF0000", "0x00FF00", or "FF0000") into an ARGB integer.
-     * If no alpha channel is detected in the input string, it defaults to full opacity (0xFF000000).
+     * Parses a color string (e.g., "-16711936", "#FF0000", "0x00FF00", or "FF0000") into an ARGB integer.
+     * Supports both signed decimal strings and standard hexadecimal formats.
      *
-     * @param hex The raw hexadecimal string to be evaluated.
-     * @return The parsed ARGB integer color, or {@code 0xffffffff} (solid white) if parsing fails.
+     * @param hex The raw color string to evaluate.
+     * @return The parsed ARGB integer color, or solid white (0xFFFFFFFF) if parsing fails.
      */
     public static int parseHex(String hex) {
-        if(hex != null && !hex.isEmpty()) {
+        if (hex != null && !hex.trim().isEmpty()) {
+            String trimmed = hex.trim();
+
             try {
-                String cleaned = hex.replace("#", "").replace("0x", "");
+                return (int) Long.parseLong(trimmed);
+            } catch (NumberFormatException ignored) {}
+
+            try {
+                String cleaned = trimmed.replace("#", "").replace("0x", "");
                 int color = Integer.parseUnsignedInt(cleaned, 16);
 
-                if(cleaned.length() <= 6) {
+                if (cleaned.length() <= 6) {
                     color |= 0xFF000000;
                 }
                 return color;
             } catch (NumberFormatException e) {
-                LOGGER.error(e.getMessage());
+                LOGGER.error("Failed to parse color string '{}': {}", hex, e.getMessage());
             }
         }
-        return 0xffffffff;
+        return 0xFFFFFFFF;
     }
 
     /**
